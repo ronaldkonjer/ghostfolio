@@ -3,8 +3,8 @@ import { Injectable } from '@angular/core';
 import { CreateOrderDto } from '@ghostfolio/api/app/order/create-order.dto';
 import { DataSource, Type } from '@prisma/client';
 import { parse } from 'date-fns';
+import { parse as csvToJson } from 'papaparse';
 import { isNumber } from 'lodash';
-import { Papa } from 'ngx-papaparse';
 import { EMPTY } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { User } from '@ghostfolio/common/interfaces';
@@ -22,20 +22,20 @@ export class ImportTransactionsService {
   private static TYPE_KEYS = ['action', 'type'];
   private static UNIT_PRICE_KEYS = ['price', 'unitprice', 'value'];
 
-  public constructor(private http: HttpClient, private papa: Papa) {}
+  public constructor(private http: HttpClient) {}
 
   public async importCsv({
-    user,
     fileContent,
-    primaryDataSource
+    primaryDataSource,
+    user
   }: {
-    user: User;
     fileContent: string;
     primaryDataSource: DataSource;
+    user: User;
   }) {
-    let content;
+    let content: any[] = [];
 
-    this.papa.parse(fileContent, {
+    csvToJson(fileContent, {
       dynamicTyping: true,
       header: true,
       skipEmptyLines: true,
@@ -58,7 +58,6 @@ export class ImportTransactionsService {
         unitPrice: this.parseUnitPrice({ content, index, item })
       });
     }
-
 
     await this.importJson({ content: orders });
   }
