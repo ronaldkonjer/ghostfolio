@@ -209,4 +209,5 @@ enum Type {
   BUY
   DIVIDEND
   SELL
+  SPLIT
 }
