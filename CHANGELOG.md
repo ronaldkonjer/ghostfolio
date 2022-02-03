@@ -5,17 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.110.0 - 02.02.2022
+
+### Fixed
+
+- Fixed the data source of the _Fear & Greed Index_ (market mood)
+
+### Todo
+
+- Apply data migration (`yarn database:migrate`)
+
+## 1.109.0 - 01.02.2022
 
 ### Added
 
 - Added support for the (optional) `accountId` in the import functionality for activities
 - Added support for the (optional) `dataSource` in the import functionality for activities
+- Added support for the data source transformation
+- Added support for the cryptocurrency _Mina Protocol_ (`MINA-USD`)
 
 ### Changed
 
+- Improved the usability of the form in the create or edit transaction dialog
 - Improved the consistent use of `symbol` in combination with `dataSource`
 - Removed the primary data source from the client
+
+### Removed
+
+- Removed the unused endpoint `GET api/order/:id`
 
 ## 1.108.0 - 27.01.2022
 
@@ -212,7 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added support for cryptocurrency _Solana_ (`SOL-USD`)
+- Added support for the cryptocurrency _Solana_ (`SOL-USD`)
 - Extended the documentation for self-hosting with the [official Ghostfolio Docker image](https://hub.docker.com/r/ghostfolio/ghostfolio)
 
 ### Fixed
