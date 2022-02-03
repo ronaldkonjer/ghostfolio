@@ -78,6 +78,16 @@ async function main() {
     where: { id: '1377d9df-0d25-42c2-9d9b-e4c63156291f' }
   });
 
+  const platformTrading212 = await prisma.platform.upsert({
+    create: {
+      id: '0e7aa798-84c9-11ec-a8a3-0242ac120002',
+      name: 'Trading212',
+      url: 'https://www.trading212.com'
+    },
+    update: {},
+    where: { id: '0e7aa798-84c9-11ec-a8a3-0242ac120002' }
+  });
+
   const userAdmin = await prisma.user.upsert({
     create: {
       accessToken:
@@ -345,6 +355,7 @@ async function main() {
     platformInteractiveBrokers,
     platformPostFinance,
     platformSwissquote,
+    platformTrading212,
     userAdmin,
     userDemo
   });
