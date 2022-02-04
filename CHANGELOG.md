@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## future release
 
 - Added support for split
@@ -12,6 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Todo
 
 - Apply data migration (`yarn database:migrate`)
+
+
+## 1.111.0 - 03.02.2022
+
+### Added
+
+- Added support for deleting symbol profile data in the admin control panel
+
+### Changed
+
+- Used `dataSource` and `symbol` from `SymbolProfile` instead of the `order` object (in `ExportService` and `PortfolioService`)
+
+### Fixed
+
+- Fixed the symbol selection of the 7d data gathering
 
 
 ## 1.110.0 - 02.02.2022
