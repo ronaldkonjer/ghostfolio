@@ -88,6 +88,16 @@ async function main() {
     where: { id: '0e7aa798-84c9-11ec-a8a3-0242ac120002' }
   });
 
+  const platformASNBank = await prisma.platform.upsert({
+    create: {
+      id: '0e7aa798-84c9-11ec-a8a3-0242ac120001',
+      name: 'ASNBank',
+      url: 'https://www.asnbank.nl'
+    },
+    update: {},
+    where: { id: '0e7aa798-84c9-11ec-a8a3-0242ac120001' }
+  });
+
   const userAdmin = await prisma.user.upsert({
     create: {
       accessToken:
@@ -356,6 +366,7 @@ async function main() {
     platformPostFinance,
     platformSwissquote,
     platformTrading212,
+    platformASNBank,
     userAdmin,
     userDemo
   });
