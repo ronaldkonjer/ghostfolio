@@ -7,12 +7,12 @@ import {
   IDataProviderResponse
 } from '@ghostfolio/api/services/interfaces/interfaces';
 import { PrismaService } from '@ghostfolio/api/services/prisma.service';
-import { DATE_FORMAT } from '@ghostfolio/common/helper';
 import { Granularity } from '@ghostfolio/common/types';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DataSource, MarketData } from '@prisma/client';
 import { format, isValid } from 'date-fns';
 import { groupBy, isEmpty } from 'lodash';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class DataProviderService {
@@ -82,9 +82,9 @@ export class DataProviderService {
 
     const rangeQuery =
       from && to
-        ? `AND date >= '${format(from, DATE_FORMAT)}' AND date <= '${format(
+        ? `AND date >= '${format(from, Constants.DATE_FORMAT)}' AND date <= '${format(
             to,
-            DATE_FORMAT
+            Constants.DATE_FORMAT
           )}'`
         : '';
 
@@ -112,7 +112,7 @@ export class DataProviderService {
 
         r[symbol] = {
           ...(r[symbol] || {}),
-          [format(new Date(date), DATE_FORMAT)]: { marketPrice }
+          [format(new Date(date), Constants.DATE_FORMAT)]: { marketPrice }
         };
 
         return r;

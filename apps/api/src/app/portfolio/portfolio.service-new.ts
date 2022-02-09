@@ -20,7 +20,7 @@ import { MarketState } from '@ghostfolio/api/services/interfaces/interfaces';
 import { EnhancedSymbolProfile } from '@ghostfolio/api/services/interfaces/symbol-profile.interface';
 import { SymbolProfileService } from '@ghostfolio/api/services/symbol-profile.service';
 import { UNKNOWN_KEY, baseCurrency } from '@ghostfolio/common/config';
-import { DATE_FORMAT, parseDate } from '@ghostfolio/common/helper';
+import { parseDate } from '@ghostfolio/common/helper';
 import {
   Accounts,
   PortfolioDetails,
@@ -64,6 +64,7 @@ import {
 } from './interfaces/portfolio-position-detail.interface';
 import { PortfolioCalculatorNew } from './portfolio-calculator-new';
 import { RulesService } from './rules.service';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class PortfolioServiceNew {
@@ -163,7 +164,7 @@ export class PortfolioServiceNew {
 
     // Add investment of today
     const investmentOfToday = investments.filter((investment) => {
-      return investment.date === format(new Date(), DATE_FORMAT);
+      return investment.date === format(new Date(), Constants.DATE_FORMAT);
     });
 
     if (investmentOfToday.length <= 0) {
@@ -173,7 +174,7 @@ export class PortfolioServiceNew {
       const lastInvestment = pastInvestments[pastInvestments.length - 1];
 
       investments.push({
-        date: format(new Date(), DATE_FORMAT),
+        date: format(new Date(), Constants.DATE_FORMAT),
         investment: lastInvestment?.investment ?? 0
       });
     }
@@ -210,7 +211,7 @@ export class PortfolioServiceNew {
     }
     let portfolioStart = parse(
       transactionPoints[0].date,
-      DATE_FORMAT,
+      Constants.DATE_FORMAT,
       new Date()
     );
 
@@ -220,14 +221,14 @@ export class PortfolioServiceNew {
 
     const timelineSpecification: TimelineSpecification[] = [
       {
-        start: format(portfolioStart, DATE_FORMAT),
+        start: format(portfolioStart, Constants.DATE_FORMAT),
         accuracy: 'day'
       }
     ];
 
     const timelineInfo = await portfolioCalculator.calculateTimeline(
       timelineSpecification,
-      format(new Date(), DATE_FORMAT)
+      format(new Date(), Constants.DATE_FORMAT)
     );
 
     const timeline = timelineInfo.timelinePeriods;
@@ -259,7 +260,7 @@ export class PortfolioServiceNew {
     portfolioStart = startOfDay(
       this.getStartDate(
         aDateRange,
-        parse(transactionPoints[0].date, DATE_FORMAT, new Date())
+        parse(transactionPoints[0].date, Constants.DATE_FORMAT, new Date())
       )
     );
 
@@ -449,7 +450,7 @@ export class PortfolioServiceNew {
       .map((order) => ({
         currency: order.currency,
         dataSource: order.SymbolProfile?.dataSource ?? order.dataSource,
-        date: format(order.date, DATE_FORMAT),
+        date: format(order.date, Constants.DATE_FORMAT),
         fee: new Big(order.fee),
         name: order.SymbolProfile?.name,
         quantity: new Big(order.quantity),
@@ -1088,7 +1089,7 @@ export class PortfolioServiceNew {
     const portfolioOrders: PortfolioOrder[] = orders.map((order) => ({
       currency: order.currency,
       dataSource: order.SymbolProfile?.dataSource ?? order.dataSource,
-      date: format(order.date, DATE_FORMAT),
+      date: format(order.date, Constants.DATE_FORMAT),
       fee: new Big(
         this.exchangeRateDataService.toCurrency(
           order.fee,

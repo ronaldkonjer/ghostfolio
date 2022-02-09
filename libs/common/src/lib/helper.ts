@@ -1,8 +1,9 @@
 import * as currencies from '@dinero.js/currencies';
 import { DataSource } from '@prisma/client';
-import { getDate, getMonth, getYear, parse, subDays } from 'date-fns';
+import { addDays, getDate, getMonth, getYear, parse, subDays } from 'date-fns';
 
 import { ghostfolioScraperApiSymbolPrefix } from './config';
+import { Constants } from '@ghostfolio/common/constants';
 
 export function capitalize(aString: string) {
   return aString.charAt(0).toUpperCase() + aString.slice(1).toLowerCase();
@@ -70,6 +71,51 @@ export function getYesterday() {
   return subDays(new Date(Date.UTC(year, month, day)), 1);
 }
 
+export function getNextDay(aDateString: string) {
+  console.log(aDateString);
+  return addDays(getUtc(aDateString), 1);
+}
+
+export function getPreviousDay(aDateString: string) {
+  return subDays(getUtc(aDateString), 1);
+}
+
+export function parseDate(aDateString: string) {
+  return parse(aDateString, Constants.DATE_FORMAT, new Date());
+}
+
+// parse a date in yyyy-mm-dd format
+// export function parseDDMMYYYYDateFormat(aDateString: string, separator: string): Date {
+//     const parts: string[] = aDateString.split(separator);
+//     if(parts.length > 1)
+//       return new Date(parseInt(parts[2], 10), parseInt(parts[1], 10)-1, 10, parseInt(parts[0], 10));
+//     else {
+//       throw new Error();
+//     }
+// }
+
+export function isValidDate(value: any): value is Date {
+  return value instanceof Date && !isNaN(value as any);
+}
+
+// Returns an array of dates between the two dates
+export function getDateInRange (startDate: Date, endDate: Date) {
+  const dates: Date[] = []
+  let currentDate: Date = startDate
+
+  const addDays = function (days) {
+    const date: Date = new Date(this.valueOf())
+    date.setDate(date.getDate() + days)
+    return date
+  }
+  while (currentDate <= endDate) {
+    dates.push(currentDate)
+    currentDate = addDays.call(currentDate, 1)
+  }
+  return dates
+}
+
+
 export function groupBy<T, K extends keyof T>(
   key: K,
   arr: T[]
@@ -114,12 +160,9 @@ export function resolveFearAndGreedIndex(aValue: number) {
   }
 }
 
-export const DATE_FORMAT = 'yyyy-MM-dd';
-
-export function parseDate(date: string) {
-  return parse(date, DATE_FORMAT, new Date());
-}
-
 export function prettifySymbol(aSymbol: string): string {
   return aSymbol?.replace(ghostfolioScraperApiSymbolPrefix, '');
 }
+
+
+

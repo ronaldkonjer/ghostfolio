@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DEFAULT_DATE_FORMAT } from '@ghostfolio/common/config';
-import { DATE_FORMAT } from '@ghostfolio/common/helper';
 import { LineChartItem } from '@ghostfolio/ui/line-chart/interfaces/line-chart.interface';
 import { DataSource, MarketData } from '@prisma/client';
 import { format, isBefore, isValid, parse } from 'date-fns';
@@ -17,6 +16,7 @@ import { DeviceDetectorService } from 'ngx-device-detector';
 import { Subject, takeUntil } from 'rxjs';
 
 import { MarketDataDetailDialog } from './market-data-detail-dialog/market-data-detail-dialog.component';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,7 +53,7 @@ export class AdminMarketDataDetailComponent implements OnChanges, OnInit {
   public ngOnChanges() {
     this.historicalDataItems = this.marketData.map((marketDataItem) => {
       return {
-        date: format(marketDataItem.date, DATE_FORMAT),
+        date: format(marketDataItem.date, Constants.DATE_FORMAT),
         value: marketDataItem.marketPrice
       };
     });
@@ -78,7 +78,7 @@ export class AdminMarketDataDetailComponent implements OnChanges, OnInit {
 
   public isDateOfInterest(aDateString: string) {
     // Date is valid and in the past
-    const date = parse(aDateString, DATE_FORMAT, new Date());
+    const date = parse(aDateString, Constants.DATE_FORMAT, new Date());
     return isValid(date) && isBefore(date, new Date());
   }
 

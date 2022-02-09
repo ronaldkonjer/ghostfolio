@@ -2,7 +2,7 @@ import { LookupItem } from '@ghostfolio/api/app/symbol/interfaces/lookup-item.in
 import { ConfigurationService } from '@ghostfolio/api/services/configuration.service';
 import { PrismaService } from '@ghostfolio/api/services/prisma.service';
 import { ghostfolioFearAndGreedIndexSymbol } from '@ghostfolio/common/config';
-import { DATE_FORMAT, getToday, getYesterday } from '@ghostfolio/common/helper';
+import { getToday, getYesterday } from '@ghostfolio/common/helper';
 import { Granularity } from '@ghostfolio/common/types';
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from '@prisma/client';
@@ -15,6 +15,7 @@ import {
   MarketState
 } from '../../interfaces/interfaces';
 import { DataProviderInterface } from '../interfaces/data-provider.interface';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class RakutenRapidApiService implements DataProviderInterface {
@@ -114,7 +115,7 @@ export class RakutenRapidApiService implements DataProviderInterface {
 
         return {
           [ghostfolioFearAndGreedIndexSymbol]: {
-            [format(getYesterday(), DATE_FORMAT)]: {
+            [format(getYesterday(), Constants.DATE_FORMAT)]: {
               marketPrice: fgi.previousClose.value
             }
           }

@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DataService } from '@ghostfolio/client/services/data.service';
-import { DATE_FORMAT } from '@ghostfolio/common/helper';
 import { OrderWithAccount } from '@ghostfolio/common/types';
 import { LineChartItem } from '@ghostfolio/ui/line-chart/interfaces/line-chart.interface';
 import { AssetSubClass } from '@prisma/client';
@@ -17,6 +16,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { PositionDetailDialogParams } from './interfaces/interfaces';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Component({
   host: { class: 'd-flex flex-column h-100' },
@@ -146,13 +146,13 @@ export class PositionDetailDialog implements OnDestroy, OnInit {
           } else {
             // Add market price
             this.historicalDataItems.push({
-              date: format(new Date(), DATE_FORMAT),
+              date: format(new Date(), Constants.DATE_FORMAT),
               value: this.marketPrice
             });
 
             // Add benchmark
             this.benchmarkDataItems.push({
-              date: format(new Date(), DATE_FORMAT),
+              date: format(new Date(), Constants.DATE_FORMAT),
               value: averagePrice
             });
           }

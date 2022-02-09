@@ -2,11 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { UpdateMarketDataDto } from '@ghostfolio/api/app/admin/update-market-data.dto';
 import { IDataProviderHistoricalResponse } from '@ghostfolio/api/services/interfaces/interfaces';
-import { DATE_FORMAT } from '@ghostfolio/common/helper';
 import { AdminMarketDataDetails } from '@ghostfolio/common/interfaces';
 import { DataSource, MarketData } from '@prisma/client';
 import { format, parseISO } from 'date-fns';
 import { map, Observable } from 'rxjs';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable({
   providedIn: 'root'
@@ -78,7 +78,7 @@ export class AdminService {
     let url = `/api/admin/gather/${dataSource}/${symbol}`;
 
     if (date) {
-      url = `${url}/${format(date, DATE_FORMAT)}`;
+      url = `${url}/${format(date, Constants.DATE_FORMAT)}`;
     }
 
     return this.http.post<MarketData | void>(url, {});
@@ -95,7 +95,7 @@ export class AdminService {
   }) {
     const url = `/api/symbol/${dataSource}/${symbol}/${format(
       date,
-      DATE_FORMAT
+      Constants.DATE_FORMAT
     )}`;
 
     return this.http.get<IDataProviderHistoricalResponse>(url);
@@ -114,7 +114,7 @@ export class AdminService {
   }) {
     const url = `/api/admin/market-data/${dataSource}/${symbol}/${format(
       date,
-      DATE_FORMAT
+      Constants.DATE_FORMAT
     )}`;
 
     return this.http.put<MarketData>(url, marketData);

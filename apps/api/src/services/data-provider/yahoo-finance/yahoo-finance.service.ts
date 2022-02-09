@@ -1,7 +1,7 @@
 import { LookupItem } from '@ghostfolio/api/app/symbol/interfaces/lookup-item.interface';
 import { CryptocurrencyService } from '@ghostfolio/api/services/cryptocurrency/cryptocurrency.service';
 import { UNKNOWN_KEY, baseCurrency } from '@ghostfolio/common/config';
-import { DATE_FORMAT, isCurrency } from '@ghostfolio/common/helper';
+import { isCurrency } from '@ghostfolio/common/helper';
 import { Granularity } from '@ghostfolio/common/types';
 import { Injectable, Logger } from '@nestjs/common';
 import { AssetClass, AssetSubClass, DataSource } from '@prisma/client';
@@ -22,6 +22,7 @@ import {
   IYahooFinancePrice,
   IYahooFinanceQuoteResponse
 } from './interfaces/interfaces';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class YahooFinanceService implements DataProviderInterface {
@@ -186,8 +187,8 @@ export class YahooFinanceService implements DataProviderInterface {
         [symbol: string]: IYahooFinanceHistoricalResponse[];
       } = await yahooFinance.historical({
         symbols: yahooFinanceSymbols,
-        from: format(from, DATE_FORMAT),
-        to: format(to, DATE_FORMAT)
+        from: format(from, Constants.DATE_FORMAT),
+        to: format(to, Constants.DATE_FORMAT)
       });
 
       const response: {
@@ -202,7 +203,7 @@ export class YahooFinanceService implements DataProviderInterface {
         response[symbol] = {};
 
         timeSeries.forEach((timeSerie) => {
-          response[symbol][format(timeSerie.date, DATE_FORMAT)] = {
+          response[symbol][format(timeSerie.date, Constants.DATE_FORMAT)] = {
             marketPrice: timeSerie.close,
             performance: timeSerie.open - timeSerie.close
           };

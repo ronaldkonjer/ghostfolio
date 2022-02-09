@@ -1,4 +1,4 @@
-import { DATE_FORMAT, parseDate, resetHours } from '@ghostfolio/common/helper';
+import { parseDate, resetHours } from '@ghostfolio/common/helper';
 import { DataSource } from '@prisma/client';
 import Big from 'big.js';
 import { addDays, endOfDay, format, isBefore, isSameDay } from 'date-fns';
@@ -10,6 +10,7 @@ import { TimelinePeriod } from './interfaces/timeline-period.interface';
 import { TimelineSpecification } from './interfaces/timeline-specification.interface';
 import { TransactionPoint } from './interfaces/transaction-point.interface';
 import { PortfolioCalculator } from './portfolio-calculator';
+import { Constants } from '@ghostfolio/common/constants';
 
 function mockGetValue(symbol: string, date: Date) {
   switch (symbol) {
@@ -60,7 +61,7 @@ function mockGetValue(symbol: string, date: Date) {
 
       return { marketPrice: 0 };
     case 'VTI':
-      switch (format(date, DATE_FORMAT)) {
+      switch (format(date, Constants.DATE_FORMAT)) {
         case '2019-01-01':
           return { marketPrice: 144.38 };
         case '2019-02-01':

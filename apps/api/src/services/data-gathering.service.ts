@@ -3,7 +3,7 @@ import {
   PROPERTY_LAST_DATA_GATHERING,
   PROPERTY_LOCKED_DATA_GATHERING
 } from '@ghostfolio/common/config';
-import { DATE_FORMAT, resetHours } from '@ghostfolio/common/helper';
+import { resetHours } from '@ghostfolio/common/helper';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DataSource } from '@prisma/client';
 import {
@@ -21,6 +21,7 @@ import { DataEnhancerInterface } from './data-provider/interfaces/data-enhancer.
 import { ExchangeRateDataService } from './exchange-rate-data.service';
 import { IDataGatheringItem } from './interfaces/interfaces';
 import { PrismaService } from './prisma.service';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class DataGatheringService {
@@ -195,7 +196,7 @@ export class DataGatheringService {
       );
 
       const marketPrice =
-        historicalData[symbol][format(date, DATE_FORMAT)].marketPrice;
+        historicalData[symbol][format(date, Constants.DATE_FORMAT)].marketPrice;
 
       if (marketPrice) {
         return await this.prismaService.marketData.upsert({
@@ -326,11 +327,11 @@ export class DataGatheringService {
           )
         ) {
           if (
-            historicalData[symbol]?.[format(currentDate, DATE_FORMAT)]
+            historicalData[symbol]?.[format(currentDate, Constants.DATE_FORMAT)]
               ?.marketPrice
           ) {
             lastMarketPrice =
-              historicalData[symbol]?.[format(currentDate, DATE_FORMAT)]
+              historicalData[symbol]?.[format(currentDate, Constants.DATE_FORMAT)]
                 ?.marketPrice;
           }
 
@@ -349,7 +350,7 @@ export class DataGatheringService {
             Logger.warn(
               `Failed to gather data for symbol ${symbol} at ${format(
                 currentDate,
-                DATE_FORMAT
+                Constants.DATE_FORMAT
               )}.`
             );
           }

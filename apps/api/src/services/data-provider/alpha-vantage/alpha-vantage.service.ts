@@ -1,6 +1,6 @@
 import { LookupItem } from '@ghostfolio/api/app/symbol/interfaces/lookup-item.interface';
 import { ConfigurationService } from '@ghostfolio/api/services/configuration.service';
-import { DATE_FORMAT } from '@ghostfolio/common/helper';
+import { Constants } from '@ghostfolio/common/constants';
 import { Granularity } from '@ghostfolio/common/types';
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from '@prisma/client';
@@ -67,8 +67,8 @@ export class AlphaVantageService implements DataProviderInterface {
         historicalData['Time Series (Digital Currency Daily)']
       ).sort()) {
         if (
-          isAfter(from, parse(key, DATE_FORMAT, new Date())) &&
-          isBefore(to, parse(key, DATE_FORMAT, new Date()))
+          isAfter(from, parse(key, Constants.DATE_FORMAT, new Date())) &&
+          isBefore(to, parse(key, Constants.DATE_FORMAT, new Date()))
         ) {
           response[symbol][key] = {
             marketPrice: parseFloat(timeSeries['4a. close (USD)'])

@@ -1,6 +1,6 @@
 import { TimelineInfoInterface } from '@ghostfolio/api/app/portfolio/interfaces/timeline-info.interface';
 import { IDataGatheringItem } from '@ghostfolio/api/services/interfaces/interfaces';
-import { DATE_FORMAT, parseDate, resetHours } from '@ghostfolio/common/helper';
+import { parseDate, resetHours } from '@ghostfolio/common/helper';
 import { TimelinePosition } from '@ghostfolio/common/interfaces';
 import { Logger } from '@nestjs/common';
 import { Type as TypeOfOrder } from '@prisma/client';
@@ -30,6 +30,7 @@ import {
 } from './interfaces/timeline-specification.interface';
 import { TransactionPointSymbol } from './interfaces/transaction-point-symbol.interface';
 import { TransactionPoint } from './interfaces/transaction-point.interface';
+import { Constants } from '@ghostfolio/common/constants';
 
 export class PortfolioCalculator {
   private transactionPoints: TransactionPoint[];
@@ -196,7 +197,7 @@ export class PortfolioCalculator {
       [date: string]: { [symbol: string]: Big };
     } = {};
     for (const marketSymbol of marketSymbols) {
-      const date = format(marketSymbol.date, DATE_FORMAT);
+      const date = format(marketSymbol.date, Constants.DATE_FORMAT);
       if (!marketSymbolMap[date]) {
         marketSymbolMap[date] = {};
       }
@@ -208,13 +209,13 @@ export class PortfolioCalculator {
     }
 
     let hasErrors = false;
-    const startString = format(start, DATE_FORMAT);
+    const startString = format(start, Constants.DATE_FORMAT);
 
     const holdingPeriodReturns: { [symbol: string]: Big } = {};
     const netHoldingPeriodReturns: { [symbol: string]: Big } = {};
     const grossPerformance: { [symbol: string]: Big } = {};
     const netPerformance: { [symbol: string]: Big } = {};
-    const todayString = format(today, DATE_FORMAT);
+    const todayString = format(today, Constants.DATE_FORMAT);
 
     if (firstIndex > 0) {
       firstIndex--;
@@ -588,7 +589,7 @@ export class PortfolioCalculator {
       }
 
       for (const marketSymbol of marketSymbols) {
-        const date = format(marketSymbol.date, DATE_FORMAT);
+        const date = format(marketSymbol.date, Constants.DATE_FORMAT);
         if (!marketSymbolMap[date]) {
           marketSymbolMap[date] = {};
         }
@@ -609,7 +610,7 @@ export class PortfolioCalculator {
       currentDate = addDays(currentDate, 1)
     ) {
       let value = new Big(0);
-      const currentDateAsString = format(currentDate, DATE_FORMAT);
+      const currentDateAsString = format(currentDate, Constants.DATE_FORMAT);
       let invalid = false;
       if (j >= 0) {
         for (const item of this.transactionPoints[j].items) {

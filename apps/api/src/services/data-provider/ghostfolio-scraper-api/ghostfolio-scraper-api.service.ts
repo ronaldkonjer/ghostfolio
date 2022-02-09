@@ -8,7 +8,6 @@ import {
 import { PrismaService } from '@ghostfolio/api/services/prisma.service';
 import { SymbolProfileService } from '@ghostfolio/api/services/symbol-profile.service';
 import {
-  DATE_FORMAT,
   getYesterday,
   isGhostfolioScraperApiSymbol
 } from '@ghostfolio/common/helper';
@@ -18,6 +17,7 @@ import { DataSource } from '@prisma/client';
 import * as bent from 'bent';
 import * as cheerio from 'cheerio';
 import { format } from 'date-fns';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class GhostfolioScraperApiService implements DataProviderInterface {
@@ -99,7 +99,7 @@ export class GhostfolioScraperApiService implements DataProviderInterface {
 
       return {
         [symbol]: {
-          [format(getYesterday(), DATE_FORMAT)]: {
+          [format(getYesterday(), Constants.DATE_FORMAT)]: {
             marketPrice: value
           }
         }

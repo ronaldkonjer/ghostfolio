@@ -8,12 +8,13 @@ import {
 } from '@ghostfolio/api/services/interfaces/interfaces';
 import { PrismaService } from '@ghostfolio/api/services/prisma.service';
 import { SymbolProfileService } from '@ghostfolio/api/services/symbol-profile.service';
-import { DATE_FORMAT, parseDate } from '@ghostfolio/common/helper';
+import { parseDate } from '@ghostfolio/common/helper';
 import { Granularity } from '@ghostfolio/common/types';
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from '@prisma/client';
 import { format } from 'date-fns';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class GoogleSheetsService implements DataProviderInterface {
@@ -106,7 +107,7 @@ export class GoogleSheetsService implements DataProviderInterface {
           const date = parseDate(row._rawData[0]);
           const close = parseFloat(row._rawData[1]);
 
-          historicalData[format(date, DATE_FORMAT)] = { marketPrice: close };
+          historicalData[format(date, Constants.DATE_FORMAT)] = { marketPrice: close };
         });
 
       return {

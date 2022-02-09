@@ -5,13 +5,13 @@ import {
   IDataProviderHistoricalResponse
 } from '@ghostfolio/api/services/interfaces/interfaces';
 import { MarketDataService } from '@ghostfolio/api/services/market-data.service';
-import { DATE_FORMAT } from '@ghostfolio/common/helper';
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from '@prisma/client';
 import { format, subDays } from 'date-fns';
 
 import { LookupItem } from './interfaces/lookup-item.interface';
 import { SymbolItem } from './interfaces/symbol-item.interface';
+import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class SymbolService {
@@ -77,7 +77,7 @@ export class SymbolService {
 
     return {
       marketPrice:
-        historicalData?.[symbol]?.[format(date, DATE_FORMAT)]?.marketPrice
+        historicalData?.[symbol]?.[format(date, Constants.DATE_FORMAT)]?.marketPrice
     };
   }
 
