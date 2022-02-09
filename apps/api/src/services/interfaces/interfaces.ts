@@ -16,7 +16,7 @@ export const MarketState = {
 export interface IOrder {
   account: Account;
   currency: string;
-  date: string;
+  date: Date;
   fee: number;
   id?: string;
   isDraft: boolean;
@@ -52,6 +52,14 @@ export interface IDataGatheringItem {
   dataSource: DataSource;
   date?: Date;
   symbol: string;
+}
+
+export interface IDataExchangeRateItem {
+  dateString: string;
+  symbol: string;
+  currency1: string;
+  currency2: string;
+  factor: number;
 }
 
 export type MarketState = typeof MarketState[keyof typeof MarketState];

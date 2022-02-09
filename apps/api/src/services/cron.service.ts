@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { DataGatheringService } from './data-gathering.service';
 import { ExchangeRateDataService } from './exchange-rate-data.service';
+import { getUtc } from '@ghostfolio/common/helper';
 
 @Injectable()
 export class CronService {
@@ -18,7 +19,9 @@ export class CronService {
 
   @Cron(CronExpression.EVERY_12_HOURS)
   public async runEveryTwelveHours() {
-    await this.exchangeRateDataService.loadCurrencies();
+    //TODO: create better solution
+    const fromDate = getUtc("2017-01-01");
+    await this.exchangeRateDataService.loadCurrencies(fromDate);
   }
 
   @Cron(CronExpression.EVERY_WEEKEND)

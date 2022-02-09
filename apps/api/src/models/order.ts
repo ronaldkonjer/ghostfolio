@@ -7,7 +7,7 @@ export class Order {
   private account: Account;
   private currency: string;
   private fee: number;
-  private date: string;
+  private date: Date;
   private id: string;
   private isDraft: boolean;
   private quantity: number;
