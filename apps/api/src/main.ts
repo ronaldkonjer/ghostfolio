@@ -1,5 +1,6 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import * as express from "express";
 
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
@@ -16,6 +17,8 @@ async function bootstrap() {
       whitelist: true
     })
   );
+  app.use(express.json({limit: '20mb'}));
+  app.use(express.urlencoded({ extended: false, limit: '20mb' }));
 
   const port = process.env.PORT || 3333;
   await app.listen(port, () => {
