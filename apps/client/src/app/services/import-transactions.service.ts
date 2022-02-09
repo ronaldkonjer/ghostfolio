@@ -7,6 +7,7 @@ import { isNumber } from 'lodash';
 import { parse as csvToJson } from 'papaparse';
 import { EMPTY } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { isValidDate } from '@ghostfolio/common/helper';
 
 @Injectable({
   providedIn: 'root'
@@ -51,6 +52,8 @@ export class ImportTransactionsService {
         unitPrice: this.parseUnitPrice({ content, index, item })
       });
     }
+
+
 
     await this.importJson({ content: orders });
   }
@@ -151,11 +154,17 @@ export class ImportTransactionsService {
     for (const key of ImportTransactionsService.DATE_KEYS) {
       if (item[key]) {
         try {
-          date = parse(item[key], 'dd-MM-yyyy', new Date()).toISOString();
+          const rawDate = parse(item[key], 'dd-MM-yyyy', new Date());
+          if(isValidDate(rawDate)) {
+            date = new Date(rawDate.getTime() - rawDate.getTimezoneOffset() * 60000).toISOString();
+          }
         } catch {}
 
         try {
-          date = parse(item[key], 'dd/MM/yyyy', new Date()).toISOString();
+          const rawDate = parse(item[key], 'dd/MM/yyyy', new Date());
+          if(isValidDate(rawDate)) {
+            date = new Date(rawDate.getTime() - rawDate.getTimezoneOffset() * 60000).toISOString();
+          }
         } catch {}
 
         if (date) {

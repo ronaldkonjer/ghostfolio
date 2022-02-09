@@ -1,15 +1,21 @@
 import { OrderService } from '@ghostfolio/api/app/order/order.service';
 import { ConfigurationService } from '@ghostfolio/api/services/configuration.service';
 import { DataProviderService } from '@ghostfolio/api/services/data-provider/data-provider.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Order } from '@prisma/client';
 import { isSameDay, parseISO } from 'date-fns';
+import { IDataProviderResponse } from '@ghostfolio/api/services/interfaces/interfaces';
+import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data.service';
+import { isValidDate } from '@ghostfolio/common/helper';
+import { OrderWithAccount } from '@ghostfolio/common/types';
+import { from } from 'rxjs';
 
 @Injectable()
 export class ImportService {
   public constructor(
     private readonly configurationService: ConfigurationService,
     private readonly dataProviderService: DataProviderService,
+    private readonly exchangeRateDataService: ExchangeRateDataService,
     private readonly orderService: OrderService
   ) {}
 
@@ -20,14 +26,41 @@ export class ImportService {
     orders: Partial<Order>[];
     userId: string;
   }): Promise<void> {
+
+    // order by date
+    orders.sort(function(a, b) {
+      return b.date.valueOf() - a.date.valueOf();
+    });
+
     for (const order of orders) {
       order.dataSource =
         order.dataSource ?? this.dataProviderService.getPrimaryDataSource();
     }
 
-    await this.validateOrders({ orders, userId });
+    const existingOrders = await this.orderService.orders({
+      orderBy: { date: 'desc' },
+      where: { userId }
+    });
 
-    for (const {
+    await this.validateOrders({ existingOrders, orders, userId });
+
+    let fromDate: Date = orders[0].date
+    if(!isValidDate(fromDate)) {
+      console.log("fromDate is not valid parse to ISO")
+      fromDate = parseISO(fromDate);
+    }
+    let toDate: Date = orders[orders.length - 1].date;
+    if(!isValidDate(toDate)) {
+      console.log("toDate is not valid parse to ISO")
+      toDate = parseISO(toDate);
+    }
+
+
+    const firstDateInImport: Date = fromDate;
+    const lastDateInImport: Date = toDate;
+    await this.exchangeRateDataService.loadCurrenciesForRange(firstDateInImport, lastDateInImport);
+
+    for (let {
       accountId,
       currency,
       dataSource,
@@ -38,40 +71,66 @@ export class ImportService {
       type,
       unitPrice
     } of orders) {
-      await this.orderService.createOrder({
-        accountId,
+
+      // if imported currency is not equal to SymbolProfile currency
+      const result = await this.dataProviderService.get([
+        { dataSource, symbol }
+      ]);
+      unitPrice = this.foreignExchange(unitPrice, result, symbol, currency, date);
+      fee = this.foreignExchange(fee, result, symbol, currency, date);
+
+      const duplicateOrder = this.findDuplicateOrder(
+        existingOrders,
         currency,
         dataSource,
+        date,
         fee,
         quantity,
         symbol,
         type,
-        unitPrice,
-        userId,
-        date: parseISO(<string>(<unknown>date)),
-        SymbolProfile: {
-          connectOrCreate: {
-            create: {
-              dataSource,
-              symbol
-            },
-            where: {
-              dataSource_symbol: {
+        unitPrice
+      );
+
+      if (duplicateOrder) {
+        continue
+      } else {
+        await this.orderService.createOrder({
+          accountId,
+          currency,
+          dataSource,
+          fee,
+          quantity,
+          symbol,
+          type,
+          unitPrice,
+          userId,
+          date: parseISO(<string>(<unknown>date)),
+          SymbolProfile: {
+            connectOrCreate: {
+              create: {
                 dataSource,
                 symbol
+              },
+              where: {
+                dataSource_symbol: {
+                  dataSource,
+                  symbol
+                }
               }
             }
-          }
-        },
-        User: { connect: { id: userId } }
-      });
+          },
+          User: { connect: { id: userId } }
+        });
+      }
     }
   }
 
   private async validateOrders({
+    existingOrders,
     orders,
     userId
   }: {
+    existingOrders: Order[]
     orders: Partial<Order>[];
     userId: string;
   }) {
@@ -85,30 +144,25 @@ export class ImportService {
       );
     }
 
-    const existingOrders = await this.orderService.orders({
-      orderBy: { date: 'desc' },
-      where: { userId }
-    });
-
     for (const [
       index,
       { currency, dataSource, date, fee, quantity, symbol, type, unitPrice }
     ] of orders.entries()) {
-      const duplicateOrder = existingOrders.find((order) => {
-        return (
-          order.currency === currency &&
-          order.dataSource === dataSource &&
-          isSameDay(order.date, parseISO(<string>(<unknown>date))) &&
-          order.fee === fee &&
-          order.quantity === quantity &&
-          order.symbol === symbol &&
-          order.type === type &&
-          order.unitPrice === unitPrice
-        );
-      });
+      const duplicateOrder = this.findDuplicateOrder(
+        existingOrders,
+        currency,
+        dataSource,
+        date,
+        fee,
+        quantity,
+        symbol,
+        type,
+        unitPrice
+      );
 
       if (duplicateOrder) {
-        throw new Error(`orders.${index} is a duplicate transaction`);
+        Logger.warn(`orders.${index} is a duplicate transaction, order: ` + JSON.stringify(orders[index]));
+        // throw new (`orders.${index} is a duplicate transaction`);
       }
 
       const result = await this.dataProviderService.get([
@@ -122,10 +176,30 @@ export class ImportService {
       }
 
       if (result[symbol].currency !== currency) {
-        throw new Error(
-          `orders.${index}.currency ("${currency}") does not match with "${result[symbol].currency}"`
-        );
+        Logger.warn(`orders.${index}.currency ("${currency}") does not match with "${result[symbol].currency}" order: ` + JSON.stringify(orders[index]));
       }
     }
+  }
+
+  private findDuplicateOrder(existingOrders: OrderWithAccount[], currency, dataSource, date, fee, quantity, symbol, type, unitPrice) {
+    const duplicateOrder = existingOrders.find((order) => {
+      return (
+        order.currency === currency &&
+        order.dataSource === dataSource &&
+        isSameDay(order.date, parseISO(<string>(<unknown>date))) &&
+        order.fee === fee &&
+        order.quantity === quantity &&
+        order.symbol === symbol &&
+        order.type === type &&
+        order.unitPrice === unitPrice
+      );
+    });
+    return duplicateOrder;
+  }
+
+  private foreignExchange(value, result: { [result: string]: IDataProviderResponse }, symbol, currency, date) {
+    return result[symbol].currency !== currency
+      ? this.exchangeRateDataService.toCurrencyInPast(value, currency, result[symbol].currency, date, 0)
+      : value;
   }
 }
