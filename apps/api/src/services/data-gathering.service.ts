@@ -331,8 +331,9 @@ export class DataGatheringService {
               ?.marketPrice
           ) {
             lastMarketPrice =
-              historicalData[symbol]?.[format(currentDate, Constants.DATE_FORMAT)]
-                ?.marketPrice;
+              historicalData[symbol]?.[
+                format(currentDate, Constants.DATE_FORMAT)
+              ]?.marketPrice;
           }
 
           if (lastMarketPrice) {

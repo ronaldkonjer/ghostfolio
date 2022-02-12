@@ -82,10 +82,10 @@ export class DataProviderService {
 
     const rangeQuery =
       from && to
-        ? `AND date >= '${format(from, Constants.DATE_FORMAT)}' AND date <= '${format(
-            to,
+        ? `AND date >= '${format(
+            from,
             Constants.DATE_FORMAT
-          )}'`
+          )}' AND date <= '${format(to, Constants.DATE_FORMAT)}'`
         : '';
 
     const dataSources = aItems.map((item) => {

@@ -19,9 +19,7 @@ export class CronService {
 
   @Cron(CronExpression.EVERY_12_HOURS)
   public async runEveryTwelveHours() {
-    //TODO: create better solution
-    const fromDate = getUtc("2017-01-01");
-    await this.exchangeRateDataService.loadCurrencies(fromDate);
+    await this.exchangeRateDataService.loadCurrencies();
   }
 
   @Cron(CronExpression.EVERY_WEEKEND)

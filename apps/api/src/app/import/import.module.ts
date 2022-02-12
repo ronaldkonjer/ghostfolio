@@ -19,7 +19,7 @@ import { ImportService } from './import.service';
     ExchangeRateDataModule,
     OrderModule,
     PrismaModule,
-    RedisCacheModule,
+    RedisCacheModule
   ],
   controllers: [ImportController],
   providers: [CacheService, ImportService]

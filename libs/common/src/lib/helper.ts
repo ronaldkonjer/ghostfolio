@@ -113,22 +113,21 @@ export function isValidDate(value: any): value is Date {
 }
 
 // Returns an array of dates between the two dates
-export function getDateInRange (startDate: Date, endDate: Date) {
-  const dates: Date[] = []
-  let currentDate: Date = startDate
+export function getDateInRange(startDate: Date, endDate: Date) {
+  const dates: Date[] = [];
+  let currentDate: Date = startDate;
 
   const addDays = function (days) {
-    const date: Date = new Date(this.valueOf())
-    date.setDate(date.getDate() + days)
-    return date
-  }
+    const date: Date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+  };
   while (currentDate <= endDate) {
-    dates.push(currentDate)
-    currentDate = addDays.call(currentDate, 1)
+    dates.push(currentDate);
+    currentDate = addDays.call(currentDate, 1);
   }
-  return dates
+  return dates;
 }
-
 
 export function groupBy<T, K extends keyof T>(
   key: K,
@@ -177,6 +176,3 @@ export function resolveFearAndGreedIndex(aValue: number) {
 export function prettifySymbol(aSymbol: string): string {
   return aSymbol?.replace(ghostfolioScraperApiSymbolPrefix, '');
 }
-
-
-

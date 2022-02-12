@@ -6,9 +6,7 @@ import { Order } from '@prisma/client';
 import { isSameDay, parseISO } from 'date-fns';
 import { IDataProviderResponse } from '@ghostfolio/api/services/interfaces/interfaces';
 import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data.service';
-import { isValidDate } from '@ghostfolio/common/helper';
 import { OrderWithAccount } from '@ghostfolio/common/types';
-import { from } from 'rxjs';
 
 @Injectable()
 export class ImportService {
@@ -26,12 +24,6 @@ export class ImportService {
     orders: Partial<Order>[];
     userId: string;
   }): Promise<void> {
-
-    // order by date
-    orders.sort(function(a, b) {
-      return b.date.valueOf() - a.date.valueOf();
-    });
-
     for (const order of orders) {
       order.dataSource =
         order.dataSource ?? this.dataProviderService.getPrimaryDataSource();
@@ -44,22 +36,6 @@ export class ImportService {
 
     await this.validateOrders({ existingOrders, orders, userId });
 
-    let fromDate: Date = orders[0].date
-    if(!isValidDate(fromDate)) {
-      console.log("fromDate is not valid parse to ISO")
-      fromDate = parseISO(fromDate);
-    }
-    let toDate: Date = orders[orders.length - 1].date;
-    if(!isValidDate(toDate)) {
-      console.log("toDate is not valid parse to ISO")
-      toDate = parseISO(toDate);
-    }
-
-
-    const firstDateInImport: Date = fromDate;
-    const lastDateInImport: Date = toDate;
-    await this.exchangeRateDataService.loadCurrenciesForRange(firstDateInImport, lastDateInImport);
-
     for (let {
       accountId,
       currency,
@@ -71,13 +47,22 @@ export class ImportService {
       type,
       unitPrice
     } of orders) {
-
       // if imported currency is not equal to SymbolProfile currency
       const result = await this.dataProviderService.get([
         { dataSource, symbol }
       ]);
-      unitPrice = this.foreignExchange(unitPrice, result, symbol, currency, date);
-      fee = this.foreignExchange(fee, result, symbol, currency, date);
+
+      if (result[symbol].currency !== currency) {
+        unitPrice = this.foreignExchange(
+          unitPrice,
+          result,
+          symbol,
+          currency,
+          date
+        );
+        fee = this.foreignExchange(fee, result, symbol, currency, date);
+        currency = result[symbol].currency;
+      }
 
       const duplicateOrder = this.findDuplicateOrder(
         existingOrders,
@@ -92,7 +77,7 @@ export class ImportService {
       );
 
       if (duplicateOrder) {
-        continue
+        continue;
       } else {
         await this.orderService.createOrder({
           accountId,
@@ -130,7 +115,7 @@ export class ImportService {
     orders,
     userId
   }: {
-    existingOrders: Order[]
+    existingOrders: Order[];
     orders: Partial<Order>[];
     userId: string;
   }) {
@@ -161,7 +146,10 @@ export class ImportService {
       );
 
       if (duplicateOrder) {
-        Logger.warn(`orders.${index} is a duplicate transaction, order: ` + JSON.stringify(orders[index]));
+        Logger.warn(
+          `orders.${index} is a duplicate transaction, order: ` +
+            JSON.stringify(orders[index])
+        );
         // throw new (`orders.${index} is a duplicate transaction`);
       }
 
@@ -176,12 +164,25 @@ export class ImportService {
       }
 
       if (result[symbol].currency !== currency) {
-        Logger.warn(`orders.${index}.currency ("${currency}") does not match with "${result[symbol].currency}" order: ` + JSON.stringify(orders[index]));
+        Logger.warn(
+          `orders.${index}.currency ("${currency}") does not match with "${result[symbol].currency}" order: ` +
+            JSON.stringify(orders[index])
+        );
       }
     }
   }
 
-  private findDuplicateOrder(existingOrders: OrderWithAccount[], currency, dataSource, date, fee, quantity, symbol, type, unitPrice) {
+  private findDuplicateOrder(
+    existingOrders: OrderWithAccount[],
+    currency,
+    dataSource,
+    date,
+    fee,
+    quantity,
+    symbol,
+    type,
+    unitPrice
+  ) {
     const duplicateOrder = existingOrders.find((order) => {
       return (
         order.currency === currency &&
@@ -197,9 +198,20 @@ export class ImportService {
     return duplicateOrder;
   }
 
-  private foreignExchange(value, result: { [result: string]: IDataProviderResponse }, symbol, currency, date) {
+  private foreignExchange(
+    value,
+    result: { [result: string]: IDataProviderResponse },
+    symbol,
+    currency,
+    date
+  ) {
     return result[symbol].currency !== currency
-      ? this.exchangeRateDataService.toCurrencyInPast(value, currency, result[symbol].currency, date, 0)
+      ? this.exchangeRateDataService.toCurrencyInPast(
+          value,
+          currency,
+          result[symbol].currency,
+          date
+        )
       : value;
   }
 }

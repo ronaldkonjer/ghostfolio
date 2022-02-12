@@ -1,14 +1,24 @@
+import { OrderService } from '@ghostfolio/api/app/order/order.service';
 import { baseCurrency, PROPERTY_CURRENCIES } from '@ghostfolio/common/config';
-import { getNextDay, getToday, getUtc,  isValidDate } from '@ghostfolio/common/helper';
+import { Constants } from '@ghostfolio/common/constants';
+import {
+  getNextDay,
+  getToday,
+  getUtc,
+  getYesterday,
+  isValidDate
+} from '@ghostfolio/common/helper';
 import { Injectable, Logger } from '@nestjs/common';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { isNumber, uniq } from 'lodash';
 
 import { DataProviderService } from './data-provider/data-provider.service';
-import { IDataExchangeRateItem, IDataGatheringItem } from './interfaces/interfaces';
+import {
+  IDataExchangeRateItem,
+  IDataGatheringItem
+} from './interfaces/interfaces';
 import { PrismaService } from './prisma.service';
 import { PropertyService } from './property/property.service';
-import { Constants } from '@ghostfolio/common/constants';
 
 @Injectable()
 export class ExchangeRateDataService {
@@ -17,10 +27,11 @@ export class ExchangeRateDataService {
   private currencies: string[] = [];
   private currencyPairs: IDataGatheringItem[] = [];
   private exchangeRates: IDataExchangeRateItem[] = [];
-  private missingExchangeRatesSymbolDatePairs: [string, string][] = []
+  private missingExchangeRatesSymbolDatePairs: [string, string][] = [];
 
   public constructor(
     private readonly dataProviderService: DataProviderService,
+    private readonly orderService: OrderService,
     private readonly prismaService: PrismaService,
     private readonly propertyService: PropertyService
   ) {
@@ -51,12 +62,15 @@ export class ExchangeRateDataService {
         symbol: `${currency1}${currency2}`
       });
     }
-    const fromDate = getUtc("2017-01-01");
-    await this.loadCurrencies(fromDate);
+
+    await this.loadCurrencies();
   }
 
-  public async loadCurrencies(fromDate) {
-    await this.loadCurrenciesForRange(fromDate, getToday())
+  public async loadCurrencies() {
+    const startDate = getUtc('2017-01-01');
+    const fromDate = getFirstOrderAfterDate(startDate);
+    getUtc('2017-01-01');
+    await this.loadCurrenciesForRange(fromDate, getToday());
   }
 
   public async loadCurrenciesForRange(fromDate, toDate) {
@@ -73,154 +87,87 @@ export class ExchangeRateDataService {
     });
     console.log(resultCount);
 
-    const datesInRange = differenceInDays(
-      toDate,
-      fromDate,
-    );
+    // const datesInRange = differenceInDays(toDate, fromDate);
 
-    // console.log(datesInRange);
-    // console.log(this.currencyPairs.length);
-    // console.log(datesInRange * this.currencyPairs.length);
-    // console.log(resultCount);
-    //   // this check only works with one date like yesterday
-    // if (Object.keys(result).length !== this.currencyPairs.length) {
-    // if(datesInRange * this.currencyPairs.length !== resultCount) {
-    //   console.log("we do not have all currencies factors yet");
-    //   //     // Load currencies directly from data provider as a fallback
-    // //     // if historical data is not fully available
-    //   const historicalData = await this.dataProviderService.get(
-    //     this.currencyPairs.map(({ dataSource, symbol }) => {
-    //       return { dataSource, symbol };
-    //     })
-    //   );
-    //
-    //   // console.log(historicalData)
-    //   Object.keys(historicalData).forEach((key) => {
-    //     result[key] = {
-    //       [format(getYesterday(), Constants.DATE_FORMAT)]: {
-    //         marketPrice: historicalData[key].marketPrice
-    //       }
-    //     };
-    //   });
-    // // console.log(historicalData);
-    // }
+    if (Object.keys(result).length !== this.currencyPairs.length) {
+      // if(datesInRange * this.currencyPairs.length !== resultCount) {
+
+      // Load currencies directly from data provider as a fallback
+      // if historical data is not fully available
+      const historicalData = await this.dataProviderService.get(
+        this.currencyPairs.map(({ dataSource, symbol }) => {
+          return { dataSource, symbol };
+        })
+      );
+
+      Object.keys(historicalData).forEach((key) => {
+        result[key] = {
+          [format(getYesterday(), Constants.DATE_FORMAT)]: {
+            marketPrice: historicalData[key].marketPrice
+          }
+        };
+      });
+    }
 
     const resultExtended = result;
-
 
     // Calculate the opposite direction
     Object.keys(result).forEach((pair) => {
       const [currency1, currency2] = pair.match(/.{1,3}/g);
-      resultExtended[`${currency2}${currency1}`] = {}
+      resultExtended[`${currency2}${currency1}`] = {};
       Object.keys(result[pair]).forEach((date) => {
         let newObject = {
           [date]: {
             marketPrice: 1 / result[pair][date].marketPrice
           }
-        }
+        };
         Object.assign(resultExtended[`${currency2}${currency1}`], newObject);
       });
     });
 
-
-
-      // Object.keys(result).forEach((pair) => {
-      //   const [currency1, currency2] = pair.match(/.{1,3}/g);
-      //   // const exchangeRateItems: IDataExchangeRateItem[] = []
-      //   Object.keys(result[pair]).forEach((date) => {
-      //     // Calculate the opposite direction
-      //     console.log(date)
-      //     resultExtended[`${currency2}${currency1}`] = {
-      //       [date]: {
-      //         marketPrice: 1 / result[pair][date].marketPrice
-      //       }
-      //     };
-
-
-
-          //   exchangeRateItems.push({
-          //     dateString: date,
-          //     symbol: pair,
-          //     currency1,
-          //     currency2,
-          //     factor: result[pair][date].marketPrice
-          //   })
-
-          // resultExtended[`${currency2}${currency1}`]
-
-        // });
-
-        // });
-
-
-        // Calculate the opposite direction
-        // resultExtended[`${currency2}${currency1}`] = {
-        //   [date]: {
-        //     marketPrice: 1 / result[pair][date].marketPrice
-        //   }
-        //  };
-      // });
-
-      // console.log(resultExtended);
-      Object.keys(resultExtended).forEach((symbol) => {
-        const [currency1, currency2] = symbol.match(/.{1,3}/g);
-        Object.keys(result[symbol]).forEach((date) => {
-          if (result[symbol][date].marketPrice) {
-            this.exchangeRates.push({
-              dateString: date,
-              symbol: symbol,
-              currency1,
-              currency2,
-              factor: result[symbol][date].marketPrice
-            })
-          } else {
-            this.missingExchangeRatesSymbolDatePairs.push([symbol, date])
-          }
-        });
+    Object.keys(resultExtended).forEach((symbol) => {
+      const [currency1, currency2] = symbol.match(/.{1,3}/g);
+      Object.keys(result[symbol]).forEach((date) => {
+        if (result[symbol][date].marketPrice) {
+          this.exchangeRates.push({
+            dateString: date,
+            symbol: symbol,
+            currency1,
+            currency2,
+            factor: result[symbol][date].marketPrice
+          });
+        } else {
+          this.missingExchangeRatesSymbolDatePairs.push([symbol, date]);
+        }
       });
-      console.log(this.exchangeRates);
+    });
 
-      // Not found, calculate indirectly via USD
-      this.missingExchangeRatesSymbolDatePairs.forEach(pair => {
-        const symbol = pair[0];
-        const date = pair[1];
-        const [currency1, currency2] = symbol.match(/.{1,3}/g);
+    // Not found, calculate indirectly via USD
+    this.missingExchangeRatesSymbolDatePairs.forEach((pair) => {
+      const symbol = pair[0];
+      const date = pair[1];
+      const [currency1, currency2] = symbol.match(/.{1,3}/g);
 
-        const factor = resultExtended[`${currency1}${'USD'}`]?.[date]?.marketPrice *
-        resultExtended[`${'USD'}${currency2}`]?.[date]?.marketPrice
+      const factor =
+        resultExtended[`${currency1}${'USD'}`]?.[date]?.marketPrice *
+        resultExtended[`${'USD'}${currency2}`]?.[date]?.marketPrice;
 
-        this.exchangeRates.push({
-          dateString: date,
-          symbol: symbol,
-          currency1,
-          currency2,
-          factor: factor
-        })
+      this.exchangeRates.push({
+        dateString: date,
+        symbol: symbol,
+        currency1,
+        currency2,
+        factor: factor
+      });
 
-        this.exchangeRates.push({
-          dateString: date,
-          symbol: `${currency2}${currency1}`,
-          currency1: currency2,
-          currency2: currency1,
-          factor: 1 / factor
-        })
-      })
-      // if (!this.exchangeRates[symbol].find()) {
-      //     // Not found, calculate indirectly via USD
-      //     this.exchangeRates[symbol] = {
-      //       [date]: resultExtended[`${currency1}${'USD'}`]?.[date]?.marketPrice *
-      //       resultExtended[`${'USD'}${currency2}`]?.[date]?.marketPrice
-      //     }
-      //
-      //     // Calculate the opposite direction
-      //     this.exchangeRates[`${currency2}${currency1}`] = {
-      //       [date]: 1 / this.exchangeRates[symbol][date]
-      //     }
-      //   }
-      // });
-    // });
-
-
+      this.exchangeRates.push({
+        dateString: date,
+        symbol: `${currency2}${currency1}`,
+        currency1: currency2,
+        currency2: currency1,
+        factor: 1 / factor
+      });
+    });
   }
 
   public toCurrency(
@@ -228,18 +175,9 @@ export class ExchangeRateDataService {
     aFromCurrency: string,
     aToCurrency: string
   ) {
-
-    // const hasNaN = this.exchangeRates
-    //
-    //   Object.values(this.exchangeRates).some((exchangeDateRate) => {
-    //   return Object.values(exchangeDateRate).some((exchangeRate) => {
-    //     return isNaN(<number><unknown>exchangeRate);
-    //   })
-    // });
-
-    if(this.exchangeRates.length === 0) {
+    if (this.exchangeRates.length === 0) {
       // Reinitialize if data is not loaded correctly
-      Logger.log("Reinitialize if data is not loaded correctly");
+      Logger.log('Reinitialize if data is not loaded correctly');
       this.initialize();
     }
 
@@ -247,8 +185,7 @@ export class ExchangeRateDataService {
       aValue,
       aFromCurrency,
       aToCurrency,
-      getToday(),
-      0
+      getToday()
     );
   }
 
@@ -257,50 +194,69 @@ export class ExchangeRateDataService {
     aFromCurrency: string,
     aToCurrency: string,
     aDate: Date,
-    diffDaysCounter: number
+    diffDaysCounter?: number
   ) {
-    // if date-symbol not in this.exchange rates fetch it and add it to exchangeRates then return it from exchange rates.
-    // so we only cache what we import and there is no need to preload all available dates at the other hand if we import past
-    // items changes are that we need the exchange rate more often in the import.
-
-    let date: string
-    if(isValidDate(aDate)) {
-      date = format(aDate, Constants.DATE_FORMAT);
-    } else {
-      date = format(parseISO(<string>(<unknown>aDate)), Constants.DATE_FORMAT);
+    if (!diffDaysCounter) {
+      diffDaysCounter = 0;
     }
+    // if date-symbol not in this.exchange rates fetch it and add it to exchangeRates then return it from exchange
+    // rates. so we only cache what we import and there is no need to preload all available dates at the other hand if
+    // we import past items changes are that we need the exchange rate more often in the import.
+
+    const date: string = isValidDate(aDate)
+      ? format(aDate, Constants.DATE_FORMAT)
+      : format(parseISO(<string>(<unknown>aDate)), Constants.DATE_FORMAT);
+    const symbol = `${aFromCurrency}${aToCurrency}`;
     let factor = 1;
 
     if (aFromCurrency !== aToCurrency) {
-      if (this.exchangeRates[`${aFromCurrency}${aToCurrency}`] && this.exchangeRates[`${aFromCurrency}${aToCurrency}`][date]) {
-        factor = this.exchangeRates[`${aFromCurrency}${aToCurrency}`][date];
-      } else if (this.exchangeRates[`${aFromCurrency}USD`] && this.exchangeRates[`USD${aToCurrency}`] && this.exchangeRates[`${aFromCurrency}USD`][date] && this.exchangeRates[`USD${aToCurrency}`][date]){
+      const exRateForSymbolAndDate: IDataExchangeRateItem =
+        this.exchangeRates.find(
+          (exRate) => exRate.symbol === symbol && exRate.dateString === date
+        );
+      const exRateForFromCurrencyToUSD: IDataExchangeRateItem =
+        this.exchangeRates.find(
+          (exRate) =>
+            exRate.currency1 === aFromCurrency && exRate.currency2 === 'USD'
+        );
+      const exRateForUSDToToCurrency: IDataExchangeRateItem =
+        this.exchangeRates.find(
+          (exRate) =>
+            exRate.currency1 === 'USD' && exRate.currency2 === aToCurrency
+        );
+
+      if (exRateForSymbolAndDate) {
+        factor = exRateForSymbolAndDate.factor;
+      } else if (exRateForFromCurrencyToUSD && exRateForUSDToToCurrency) {
         // Calculate indirectly via USD
-        const factor1 = this.exchangeRates[`${aFromCurrency}USD`][date];
-        const factor2 = this.exchangeRates[`USD${aToCurrency}`][date];
+        const factor1 = exRateForFromCurrencyToUSD.factor;
+        const factor2 = exRateForUSDToToCurrency.factor;
 
         factor = factor1 * factor2;
 
-        this.exchangeRates[`${aFromCurrency}${aToCurrency}`][date] = factor;
-      }
-      else if(diffDaysCounter < ExchangeRateDataService.MAX_DIFF_DAYS){
-        // this will be a bit more complex.
-        // logic should be for date if date not found find closest to this date in future
+        this.exchangeRates.push({
+          dateString: date,
+          symbol: symbol,
+          currency1: aFromCurrency,
+          currency2: aToCurrency,
+          factor: factor
+        });
+      } else if (diffDaysCounter < ExchangeRateDataService.MAX_DIFF_DAYS) {
         // cap it off at 7 days.
-        if(getUtc(date) < getToday()) {
+        if (getUtc(date) < getToday()) {
           // console.log(this.exchangeRates);
           Logger.warn(
-            `No exchange rate has been found for ${aFromCurrency}${aToCurrency} ${date}, try with next day`
+            `No exchange rate has been found for ${symbol} - ${date}, try with next day`
           );
-          diffDaysCounter++
-          return this.toCurrencyInPast(aValue, aFromCurrency, aToCurrency, getNextDay(date), diffDaysCounter);
+          diffDaysCounter++;
+          return this.toCurrencyInPast(
+            aValue,
+            aFromCurrency,
+            aToCurrency,
+            getNextDay(date),
+            diffDaysCounter
+          );
         }
-        // } else {
-        //   Logger.warn(
-        //     `No exchange rate has been found for ${aFromCurrency}${aToCurrency} ${date}, try with previous day`
-        //   );
-        //   return this.toCurrencyInPast(aValue, aFromCurrency, aToCurrency, getPreviousDay(date), diffDaysCounter++);
-        // }
       }
     }
 
@@ -310,7 +266,7 @@ export class ExchangeRateDataService {
 
     // Fallback with error, if currencies are not available
     Logger.error(
-      `No exchange rate has been found for ${aFromCurrency}${aToCurrency}`
+      `No exchange rate has been found for ${symbol} from ${date} to ${ExchangeRateDataService.MAX_DIFF_DAYS} days`
     );
     return aValue;
   }
@@ -373,7 +329,6 @@ export class ExchangeRateDataService {
 
     return uniq(currencies).sort();
   }
-
 
   private prepareCurrencyPairs(aCurrencies: string[]) {
     return aCurrencies

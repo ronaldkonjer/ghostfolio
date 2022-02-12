@@ -174,6 +174,23 @@ export class OrderService {
     });
   }
 
+  public async getFirstOrderAfterDate({
+    dateValue
+  }: {
+    dateValue: Date;
+  }): Promise<Order> {
+    // const where: Prisma.OrderWhereInput = { date };
+
+    return await this.prismaService.order.findFirst({
+      where: {
+        date: {
+          gte: dateValue
+        }
+      },
+      orderBy: { date: 'asc' }
+    });
+  }
+
   public async updateOrder(params: {
     where: Prisma.OrderWhereUniqueInput;
     data: Prisma.OrderUpdateInput;

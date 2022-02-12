@@ -53,8 +53,6 @@ export class ImportTransactionsService {
       });
     }
 
-
-
     await this.importJson({ content: orders });
   }
 
@@ -155,15 +153,19 @@ export class ImportTransactionsService {
       if (item[key]) {
         try {
           const rawDate = parse(item[key], 'dd-MM-yyyy', new Date());
-          if(isValidDate(rawDate)) {
-            date = new Date(rawDate.getTime() - rawDate.getTimezoneOffset() * 60000).toISOString();
+          if (isValidDate(rawDate)) {
+            date = new Date(
+              rawDate.getTime() - rawDate.getTimezoneOffset() * 60000
+            ).toISOString();
           }
         } catch {}
 
         try {
           const rawDate = parse(item[key], 'dd/MM/yyyy', new Date());
-          if(isValidDate(rawDate)) {
-            date = new Date(rawDate.getTime() - rawDate.getTimezoneOffset() * 60000).toISOString();
+          if (isValidDate(rawDate)) {
+            date = new Date(
+              rawDate.getTime() - rawDate.getTimezoneOffset() * 60000
+            ).toISOString();
           }
         } catch {}
 

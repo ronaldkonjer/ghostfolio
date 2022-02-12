@@ -107,7 +107,9 @@ export class GoogleSheetsService implements DataProviderInterface {
           const date = parseDate(row._rawData[0]);
           const close = parseFloat(row._rawData[1]);
 
-          historicalData[format(date, Constants.DATE_FORMAT)] = { marketPrice: close };
+          historicalData[format(date, Constants.DATE_FORMAT)] = {
+            marketPrice: close
+          };
         });
 
       return {

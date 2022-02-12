@@ -77,7 +77,8 @@ export class SymbolService {
 
     return {
       marketPrice:
-        historicalData?.[symbol]?.[format(date, Constants.DATE_FORMAT)]?.marketPrice
+        historicalData?.[symbol]?.[format(date, Constants.DATE_FORMAT)]
+          ?.marketPrice
     };
   }
 
