@@ -52,3 +52,5 @@ export const PROPERTY_STRIPE_CONFIG = 'STRIPE_CONFIG';
 export const PROPERTY_SYSTEM_MESSAGE = 'SYSTEM_MESSAGE';
 
 export const UNKNOWN_KEY = 'UNKNOWN';
+
+export const FX_START_DATE="2017-01-01";

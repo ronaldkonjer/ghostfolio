@@ -28,9 +28,7 @@ export class AdminMarketDataComponent implements OnDestroy, OnInit {
 
   private unsubscribeSubject = new Subject<void>();
 
-  /**
-   * @constructor
-   */
+
   public constructor(
     private adminService: AdminService,
     private changeDetectorRef: ChangeDetectorRef,

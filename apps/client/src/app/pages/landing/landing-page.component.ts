@@ -39,9 +39,7 @@ export class LandingPageComponent implements OnDestroy, OnInit {
 
   private unsubscribeSubject = new Subject<void>();
 
-  /**
-   * @constructor
-   */
+
   public constructor(
     private dataService: DataService,
     private router: Router,

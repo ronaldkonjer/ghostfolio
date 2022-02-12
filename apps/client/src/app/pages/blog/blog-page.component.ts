@@ -10,9 +10,7 @@ import { Subject } from 'rxjs';
 export class BlogPageComponent implements OnDestroy {
   private unsubscribeSubject = new Subject<void>();
 
-  /**
-   * @constructor
-   */
+
   public constructor() {}
 
   public ngOnDestroy() {

@@ -16,9 +16,7 @@ import { takeUntil } from 'rxjs/operators';
 export class AuthPageComponent implements OnDestroy, OnInit {
   private unsubscribeSubject = new Subject<void>();
 
-  /**
-   * @constructor
-   */
+
   public constructor(
     private route: ActivatedRoute,
     private router: Router,

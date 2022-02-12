@@ -1,7 +1,7 @@
 import { SymbolProfileService } from '@ghostfolio/api/services/symbol-profile.service';
 import {
   PROPERTY_LAST_DATA_GATHERING,
-  PROPERTY_LOCKED_DATA_GATHERING
+  PROPERTY_LOCKED_DATA_GATHERING,
 } from '@ghostfolio/common/config';
 import { resetHours } from '@ghostfolio/common/helper';
 import { Inject, Injectable, Logger } from '@nestjs/common';

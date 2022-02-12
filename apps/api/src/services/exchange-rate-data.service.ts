@@ -1,5 +1,6 @@
 import { OrderService } from '@ghostfolio/api/app/order/order.service';
-import { baseCurrency, PROPERTY_CURRENCIES } from '@ghostfolio/common/config';
+import { ConfigurationService } from '@ghostfolio/api/services/configuration.service';
+import { baseCurrency, PROPERTY_CURRENCIES, FX_START_DATE } from '@ghostfolio/common/config';
 import { Constants } from '@ghostfolio/common/constants';
 import {
   getNextDay,
@@ -11,6 +12,7 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { isNumber, uniq } from 'lodash';
+import { type } from 'os';
 
 import { DataProviderService } from './data-provider/data-provider.service';
 import {
@@ -22,8 +24,7 @@ import { PropertyService } from './property/property.service';
 
 @Injectable()
 export class ExchangeRateDataService {
-  static readonly MAX_DIFF_DAYS = 7;
-
+  private static readonly MAX_DIFF_DAYS = 7;
   private currencies: string[] = [];
   private currencyPairs: IDataGatheringItem[] = [];
   private exchangeRates: IDataExchangeRateItem[] = [];
@@ -67,9 +68,8 @@ export class ExchangeRateDataService {
   }
 
   public async loadCurrencies() {
-    const startDate = getUtc('2017-01-01');
-    const fromDate = getFirstOrderAfterDate(startDate);
-    getUtc('2017-01-01');
+    const startDate = getUtc( FX_START_DATE );
+    const fromDate = this.orderService.getFirstOrderAfterDate(startDate);
     await this.loadCurrenciesForRange(fromDate, getToday());
   }
 
@@ -85,13 +85,9 @@ export class ExchangeRateDataService {
     Object.values(result).forEach((exchangeRate) => {
       resultCount += Object.values(exchangeRate).length;
     });
-    console.log(resultCount);
 
-    // const datesInRange = differenceInDays(toDate, fromDate);
 
     if (Object.keys(result).length !== this.currencyPairs.length) {
-      // if(datesInRange * this.currencyPairs.length !== resultCount) {
-
       // Load currencies directly from data provider as a fallback
       // if historical data is not fully available
       const historicalData = await this.dataProviderService.get(

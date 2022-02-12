@@ -174,17 +174,13 @@ export class OrderService {
     });
   }
 
-  public async getFirstOrderAfterDate({
-    dateValue
-  }: {
-    dateValue: Date;
-  }): Promise<Order> {
-    // const where: Prisma.OrderWhereInput = { date };
-
+  public async getFirstOrderAfterDate(
+    date: Date
+  ): Promise<Order> {
     return await this.prismaService.order.findFirst({
       where: {
         date: {
-          gte: dateValue
+          gte: date
         }
       },
       orderBy: { date: 'asc' }

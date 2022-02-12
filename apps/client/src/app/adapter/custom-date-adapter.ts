@@ -5,9 +5,7 @@ import { format, isValid } from 'date-fns';
 import * as deDateFnsLocale from 'date-fns/locale/de/index';
 
 export class CustomDateAdapter extends NativeDateAdapter {
-  /**
-   * @constructor
-   */
+
   public constructor(
     @Inject(forwardRef(() => MAT_DATE_LOCALE)) matDateLocale: string,
     platform: Platform

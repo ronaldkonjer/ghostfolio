@@ -18,9 +18,7 @@ export class PortfolioPageComponent implements OnDestroy, OnInit {
 
   private unsubscribeSubject = new Subject<void>();
 
-  /**
-   * @constructor
-   */
+
   public constructor(
     private changeDetectorRef: ChangeDetectorRef,
     private dataService: DataService,

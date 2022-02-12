@@ -10,9 +10,7 @@ import { Subject } from 'rxjs';
 export class ResourcesPageComponent implements OnInit {
   private unsubscribeSubject = new Subject<void>();
 
-  /**
-   * @constructor
-   */
+
   public constructor() {}
 
   /**
