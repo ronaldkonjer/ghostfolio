@@ -130,8 +130,8 @@ export class TransactionsPageComponent implements OnDestroy, OnInit {
       });
   }
 
-  public onCloneTransaction(aTransaction: OrderModel) {
-    this.openCreateTransactionDialog(aTransaction);
+  public onCloneTransaction(aActivity: Activity) {
+    this.openCreateTransactionDialog(aActivity);
   }
 
   public onDeleteTransaction(aId: string) {
@@ -240,35 +240,13 @@ export class TransactionsPageComponent implements OnDestroy, OnInit {
     });
   }
 
-  public openUpdateTransactionDialog({
-    accountId,
-    currency,
-    dataSource,
-    date,
-    fee,
-    id,
-    quantity,
-    symbol,
-    type,
-    unitPrice
-  }: OrderModel): void {
+  public openUpdateTransactionDialog(activity: Activity): void {
     const dialogRef = this.dialog.open(CreateOrUpdateTransactionDialog, {
       data: {
+        activity,
         accounts: this.user?.accounts?.filter((account) => {
           return account.accountType === 'SECURITIES';
         }),
-        transaction: {
-          accountId,
-          currency,
-          dataSource,
-          date,
-          fee,
-          id,
-          quantity,
-          symbol,
-          type,
-          unitPrice
-        },
         user: this.user
       },
       height: this.deviceType === 'mobile' ? '97.5vh' : '80vh',
@@ -279,7 +257,7 @@ export class TransactionsPageComponent implements OnDestroy, OnInit {
       .afterClosed()
       .pipe(takeUntil(this.unsubscribeSubject))
       .subscribe((data: any) => {
-        const transaction: UpdateOrderDto = data?.transaction;
+        const transaction: UpdateOrderDto = data?.activity;
 
         if (transaction) {
           this.dataService
@@ -322,7 +300,7 @@ export class TransactionsPageComponent implements OnDestroy, OnInit {
     });
   }
 
-  private openCreateTransactionDialog(aTransaction?: OrderModel): void {
+  private openCreateTransactionDialog(aActivity?: Activity): void {
     this.userService
       .get()
       .pipe(takeUntil(this.unsubscribeSubject))
@@ -334,15 +312,14 @@ export class TransactionsPageComponent implements OnDestroy, OnInit {
             accounts: this.user?.accounts?.filter((account) => {
               return account.accountType === 'SECURITIES';
             }),
-            transaction: {
-              accountId: aTransaction?.accountId ?? this.defaultAccountId,
-              currency: aTransaction?.currency ?? null,
-              dataSource: aTransaction?.dataSource ?? null,
+            activity: {
+              ...aActivity,
+              accountId: aActivity?.accountId ?? this.defaultAccountId,
               date: new Date(),
+              id: null,
               fee: 0,
               quantity: null,
-              symbol: aTransaction?.symbol ?? null,
-              type: aTransaction?.type ?? 'BUY',
+              type: aActivity?.type ?? 'BUY',
               unitPrice: null
             },
             user: this.user
@@ -355,7 +332,7 @@ export class TransactionsPageComponent implements OnDestroy, OnInit {
           .afterClosed()
           .pipe(takeUntil(this.unsubscribeSubject))
           .subscribe((data: any) => {
-            const transaction: CreateOrderDto = data?.transaction;
+            const transaction: CreateOrderDto = data?.activity;
 
             if (transaction) {
               this.dataService.postOrder(transaction).subscribe({

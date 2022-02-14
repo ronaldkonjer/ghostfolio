@@ -332,6 +332,7 @@ export class PortfolioController {
         'currentValue',
         'dividend',
         'fees',
+        'items',
         'netWorth',
         'totalBuy',
         'totalSell'
@@ -343,6 +344,7 @@ export class PortfolioController {
 
   @Get('position/:dataSource/:symbol')
   @UseInterceptors(TransformDataSourceInRequestInterceptor)
+  @UseInterceptors(TransformDataSourceInResponseInterceptor)
   @UseGuards(AuthGuard('jwt'))
   public async getPosition(
     @Headers('impersonation-id') impersonationId: string,

@@ -418,7 +418,6 @@ export class PortfolioServiceNew {
     if (orders.length <= 0) {
       return {
         averagePrice: undefined,
-        currency: undefined,
         firstBuyDate: undefined,
         grossPerformance: undefined,
         grossPerformancePercent: undefined,
@@ -427,21 +426,20 @@ export class PortfolioServiceNew {
         marketPrice: undefined,
         maxPrice: undefined,
         minPrice: undefined,
-        name: undefined,
         netPerformance: undefined,
         netPerformancePercent: undefined,
         orders: [],
         quantity: undefined,
-        symbol: aSymbol,
+        SymbolProfile: undefined,
         transactionCount: undefined,
         value: undefined
       };
     }
 
-    const assetClass = orders[0].SymbolProfile?.assetClass;
-    const assetSubClass = orders[0].SymbolProfile?.assetSubClass;
     const positionCurrency = orders[0].currency;
-    const name = orders[0].SymbolProfile?.name ?? '';
+    const [SymbolProfile] = await this.symbolProfileService.getSymbolProfiles([
+      aSymbol
+    ]);
 
     const portfolioOrders: PortfolioOrder[] = orders
       .filter((order) => {
@@ -558,18 +556,15 @@ export class PortfolioServiceNew {
       }
 
       return {
-        assetClass,
-        assetSubClass,
-        currency,
         firstBuyDate,
         grossPerformance,
         investment,
         marketPrice,
         maxPrice,
         minPrice,
-        name,
         netPerformance,
         orders,
+        SymbolProfile,
         transactionCount,
         averagePrice: averagePrice.toNumber(),
         grossPerformancePercent:
@@ -577,7 +572,6 @@ export class PortfolioServiceNew {
         historicalData: historicalDataArray,
         netPerformancePercent: position.netPerformancePercentage?.toNumber(),
         quantity: quantity.toNumber(),
-        symbol: aSymbol,
         value: this.exchangeRateDataService.toCurrency(
           quantity.mul(marketPrice).toNumber(),
           currency,
@@ -622,15 +616,12 @@ export class PortfolioServiceNew {
       }
 
       return {
-        assetClass,
-        assetSubClass,
         marketPrice,
         maxPrice,
         minPrice,
-        name,
         orders,
+        SymbolProfile,
         averagePrice: 0,
-        currency: currentData[aSymbol]?.currency,
         firstBuyDate: undefined,
         grossPerformance: undefined,
         grossPerformancePercent: undefined,
@@ -639,7 +630,6 @@ export class PortfolioServiceNew {
         netPerformance: undefined,
         netPerformancePercent: undefined,
         quantity: 0,
-        symbol: aSymbol,
         transactionCount: undefined,
         value: 0
       };
@@ -892,6 +882,7 @@ export class PortfolioServiceNew {
     const dividend = this.getDividend(orders).toNumber();
     const fees = this.getFees(orders).toNumber();
     const firstOrderDate = orders[0]?.date;
+    const items = this.getItems(orders).toNumber();
 
     const totalBuy = this.getTotalByType(orders, userCurrency, 'BUY');
     const totalSell = this.getTotalByType(orders, userCurrency, 'SELL');
@@ -900,6 +891,7 @@ export class PortfolioServiceNew {
 
     const netWorth = new Big(balance)
       .plus(performanceInformation.performance.currentValue)
+      .plus(items)
       .toNumber();
 
     const daysInMarket = differenceInDays(new Date(), firstOrderDate);
@@ -923,6 +915,7 @@ export class PortfolioServiceNew {
       dividend,
       fees,
       firstOrderDate,
+      items,
       netWorth,
       totalBuy,
       totalSell,
@@ -1034,6 +1027,28 @@ export class PortfolioServiceNew {
       .map((order) => {
         return this.exchangeRateDataService.toCurrency(
           order.fee,
+          order.currency,
+          this.request.user.Settings.currency
+        );
+      })
+      .reduce(
+        (previous, current) => new Big(previous).plus(current),
+        new Big(0)
+      );
+  }
+
+  private getItems(orders: OrderWithAccount[], date = new Date(0)) {
+    return orders
+      .filter((order) => {
+        // Filter out all orders before given date and type item
+        return (
+          isBefore(date, new Date(order.date)) &&
+          order.type === TypeOfOrder.ITEM
+        );
+      })
+      .map((order) => {
+        return this.exchangeRateDataService.toCurrency(
+          new Big(order.quantity).mul(order.unitPrice).toNumber(),
           order.currency,
           this.request.user.Settings.currency
         );
