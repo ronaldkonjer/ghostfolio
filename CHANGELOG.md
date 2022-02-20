@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- Displayed features in features overview page based on permissions
+
+## 1.117.0 - 19.02.2022
+
+### Changed
+
+- Moved the countries and sectors charts in the position detail dialog
+- Distinguished today's data point of historical data in the admin control panel
+- Restructured the server modules
+
+### Fixed
+
+- Fixed the allocations by account for non-unique account names
+- Added a fallback to the default account if the `accountId` is invalid in the import functionality for activities
+
+## 1.116.0 - 16.02.2022
+
+### Added
+
+- Added a service to tweet the current _Fear & Greed Index_ (market mood)
+
+### Changed
+
+- Improved the mobile layout of the position detail dialog (countries and sectors charts)
+
+### Fixed
+
+- Fixed the `maxItems` attribute of the portfolio proportion chart component
+- Fixed the time in market display of the portfolio summary tab on the home page
+
 ## 1.115.0 - 13.02.2022
 
 ### Added

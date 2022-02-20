@@ -1,3 +1,4 @@
+import { AccountService } from '@ghostfolio/api/app/account/account.service';
 import { OrderService } from '@ghostfolio/api/app/order/order.service';
 import { ConfigurationService } from '@ghostfolio/api/services/configuration.service';
 import { DataProviderService } from '@ghostfolio/api/services/data-provider/data-provider.service';
@@ -11,6 +12,7 @@ import { OrderWithAccount } from '@ghostfolio/common/types';
 @Injectable()
 export class ImportService {
   public constructor(
+    private readonly accountService: AccountService,
     private readonly configurationService: ConfigurationService,
     private readonly dataProviderService: DataProviderService,
     private readonly exchangeRateDataService: ExchangeRateDataService,
@@ -85,7 +87,6 @@ export class ImportService {
         continue;
       } else {
         await this.orderService.createOrder({
-          accountId,
           currency,
           dataSource,
           fee,
@@ -94,7 +95,9 @@ export class ImportService {
           type,
           unitPrice,
           userId,
+	  accountId: accountIds.includes(accountId) ? accountId : undefined,
           date: parseISO(<string>(<unknown>date)),
+
           SymbolProfile: {
             connectOrCreate: {
               create: {
